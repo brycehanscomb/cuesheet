@@ -33,24 +33,27 @@ export interface CueSheet {
   destroy(): void
 }
 
+const TICK_MS = 16
+
 export function cuesheet(): CueSheet {
   let time = 0
   let playing = false
-  let rafId: number | null = null
-  let lastFrameTime: number | null = null
+  let timerId: ReturnType<typeof setTimeout> | null = null
+  let lastTickTime: number | null = null
   const listeners = new Map<Cue, Set<() => void>>()
   const firedOneShots = new Set<Cue>()
   const repeatState = new Map<Cue, { lastFireTime: number; count: number }>()
 
-  function tick(frameTime: number) {
+  function tick() {
     if (!playing) return
-    if (lastFrameTime === null) lastFrameTime = frameTime
-    const delta = frameTime - lastFrameTime
-    lastFrameTime = frameTime
+    const now = Date.now()
+    if (lastTickTime === null) lastTickTime = now
+    const delta = now - lastTickTime
+    lastTickTime = now
     const prevTime = time
     time += delta
     processCues(prevTime, time)
-    rafId = requestAnimationFrame(tick)
+    timerId = setTimeout(tick, TICK_MS)
   }
 
   function processCues(prevTime: number, currentTime: number) {
@@ -113,14 +116,14 @@ export function cuesheet(): CueSheet {
     play() {
       if (playing) return
       playing = true
-      lastFrameTime = null
-      rafId = requestAnimationFrame(tick)
+      lastTickTime = null
+      timerId = setTimeout(tick, TICK_MS)
     },
     pause() {
       playing = false
-      if (rafId != null) cancelAnimationFrame(rafId)
-      rafId = null
-      lastFrameTime = null
+      if (timerId != null) clearTimeout(timerId)
+      timerId = null
+      lastTickTime = null
     },
     seek(timeMs: number) {
       const prevTime = time
@@ -132,8 +135,8 @@ export function cuesheet(): CueSheet {
     },
     destroy() {
       playing = false
-      if (rafId != null) cancelAnimationFrame(rafId)
-      rafId = null
+      if (timerId != null) clearTimeout(timerId)
+      timerId = null
       listeners.clear()
       firedOneShots.clear()
       repeatState.clear()

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { cue, cuesheet } from './index'
 
 describe('cue()', () => {
@@ -85,5 +85,80 @@ describe('cuesheet()', () => {
   it('pause() does not throw when already paused', () => {
     const sheet = cuesheet()
     expect(() => sheet.pause()).not.toThrow()
+  })
+})
+
+describe('cuesheet — one-shot cue firing', () => {
+  beforeEach(() => { vi.useFakeTimers() })
+  afterEach(() => { vi.useRealTimers() })
+
+  it('fires a cue when its time is reached', () => {
+    const cb = vi.fn()
+    const HIT = cue(100)
+    const sheet = cuesheet()
+    sheet.on(HIT, cb)
+    sheet.play()
+    vi.advanceTimersByTime(150)
+    expect(cb).toHaveBeenCalledOnce()
+    sheet.destroy()
+  })
+
+  it('does not fire a cue before its time', () => {
+    const cb = vi.fn()
+    const HIT = cue(500)
+    const sheet = cuesheet()
+    sheet.on(HIT, cb)
+    sheet.play()
+    vi.advanceTimersByTime(100)
+    expect(cb).not.toHaveBeenCalled()
+    sheet.destroy()
+  })
+
+  it('fires a cue only once', () => {
+    const cb = vi.fn()
+    const HIT = cue(100)
+    const sheet = cuesheet()
+    sheet.on(HIT, cb)
+    sheet.play()
+    vi.advanceTimersByTime(500)
+    expect(cb).toHaveBeenCalledOnce()
+    sheet.destroy()
+  })
+
+  it('once() auto-unsubscribes after first fire', () => {
+    const cb = vi.fn()
+    const HIT = cue(100)
+    const sheet = cuesheet()
+    sheet.once(HIT, cb)
+    sheet.play()
+    vi.advanceTimersByTime(500)
+    expect(cb).toHaveBeenCalledOnce()
+    sheet.destroy()
+  })
+
+  it('unsubscribe prevents callback', () => {
+    const cb = vi.fn()
+    const HIT = cue(100)
+    const sheet = cuesheet()
+    const unsub = sheet.on(HIT, cb)
+    unsub()
+    sheet.play()
+    vi.advanceTimersByTime(500)
+    expect(cb).not.toHaveBeenCalled()
+    sheet.destroy()
+  })
+
+  it('multiple listeners on same cue all fire', () => {
+    const cb1 = vi.fn()
+    const cb2 = vi.fn()
+    const HIT = cue(100)
+    const sheet = cuesheet()
+    sheet.on(HIT, cb1)
+    sheet.on(HIT, cb2)
+    sheet.play()
+    vi.advanceTimersByTime(150)
+    expect(cb1).toHaveBeenCalledOnce()
+    expect(cb2).toHaveBeenCalledOnce()
+    sheet.destroy()
   })
 })
