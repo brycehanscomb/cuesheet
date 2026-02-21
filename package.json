@@ -4,18 +4,23 @@
   "description": "Zero-dependency TypeScript library for sequencing timed events",
   "type": "module",
   "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -23,7 +28,7 @@
   "author": "Bryce Hanscomb",
   "license": "MIT",
   "devDependencies": {
-    "tsup": "^8.5.1",
+    "tsdown": "^0.20.3",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"
   }
