@@ -1,5 +1,5 @@
 {
-  "name": "cuesheet",
+  "name": "@brycehanscomb/cuesheet",
   "version": "0.1.0",
   "description": "Zero-dependency TypeScript library for sequencing timed events",
   "type": "module",

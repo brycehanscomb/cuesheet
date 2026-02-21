@@ -5,13 +5,13 @@ Zero-dependency TypeScript library for sequencing timed events.
 ## Install
 
 ```bash
-npm install cuesheet
+npm install @brycehanscomb/cuesheet
 ```
 
 ## Quick Start
 
 ```typescript
-import { cue, cuesheet } from 'cuesheet'
+import { cue, cuesheet } from '@brycehanscomb/cuesheet'
 
 const READY = cue(0)
 const GO    = cue(3000)
