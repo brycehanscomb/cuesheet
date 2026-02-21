@@ -61,7 +61,7 @@ export function cuesheet(): CueSheet {
       if (c.interval != null) {
         processRepeatingCue(c, cbs, prevTime, currentTime)
       } else {
-        if (!firedOneShots.has(c) && currentTime >= c.startTime) {
+        if (!firedOneShots.has(c) && prevTime < c.startTime && currentTime >= c.startTime) {
           firedOneShots.add(c)
           cbs.forEach((cb) => cb())
         }
