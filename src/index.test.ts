@@ -23,3 +23,38 @@ describe('cue()', () => {
     expect(c.interval).toBeUndefined()
   })
 })
+
+describe('cue().repeats()', () => {
+  it('creates a repeating cue', () => {
+    const c = cue(1000).repeats(500)
+    expect(c.startTime).toBe(1000)
+    expect(c.interval).toBe(500)
+  })
+
+  it('repeating cue with .times() cap', () => {
+    const c = cue(0).repeats(200).times(10)
+    expect(c.interval).toBe(200)
+    expect(c.maxCount).toBe(10)
+    expect(c.untilTime).toBeUndefined()
+  })
+
+  it('repeating cue with .until() boundary', () => {
+    const END = cue(5000)
+    const c = cue(1000).repeats(500).until(END)
+    expect(c.interval).toBe(500)
+    expect(c.untilTime).toBe(5000)
+    expect(c.maxCount).toBeUndefined()
+  })
+
+  it('.times() returns a Cue without .times() or .until()', () => {
+    const c = cue(0).repeats(200).times(5)
+    expect(c).not.toHaveProperty('times')
+    expect(c).not.toHaveProperty('until')
+  })
+
+  it('.until() returns a Cue without .times() or .until()', () => {
+    const c = cue(0).repeats(200).until(cue(1000))
+    expect(c).not.toHaveProperty('times')
+    expect(c).not.toHaveProperty('until')
+  })
+})
