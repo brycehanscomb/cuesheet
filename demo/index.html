@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cuesheet — Interactive Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e8;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    h1 span { color: #7c8aff; }
+
+    .subtitle {
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* --- Timeline --- */
+    .timeline-section {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .timeline-track {
+      position: relative;
+      height: 48px;
+      background: #1a1a28;
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+      overflow: visible;
+    }
+
+    .timeline-bar {
+      position: absolute;
+      top: 50%;
+      left: 1rem;
+      right: 1rem;
+      height: 2px;
+      background: #2a2a3a;
+      transform: translateY(-50%);
+    }
+
+    #playhead {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 3px;
+      height: 32px;
+      background: #7c8aff;
+      border-radius: 2px;
+      transform: translate(-50%, -50%);
+      margin-left: 1rem;
+      transition: left 0.05s linear;
+      z-index: 2;
+      box-shadow: 0 0 8px rgba(124, 138, 255, 0.4);
+    }
+
+    .marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      margin-left: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: default;
+      transition: transform 0.15s ease;
+    }
+
+    .marker.fired { transform: translate(-50%, -50%) scale(1.3); }
+
+    .marker-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #3a3a5a;
+      border: 2px solid #5a5a7a;
+      transition: all 0.15s ease;
+    }
+
+    .marker.fired .marker-dot {
+      background: #7c8aff;
+      border-color: #7c8aff;
+      box-shadow: 0 0 12px rgba(124, 138, 255, 0.6);
+    }
+
+    .marker.repeating .marker-dot {
+      border-radius: 2px;
+      border-color: #ff8a7c;
+    }
+
+    .marker.repeating.fired .marker-dot {
+      background: #ff8a7c;
+      border-color: #ff8a7c;
+      box-shadow: 0 0 12px rgba(255, 138, 124, 0.6);
+    }
+
+    .marker-label {
+      font-size: 0.65rem;
+      color: #666;
+      margin-top: 4px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .marker.fired .marker-label { color: #bbb; }
+
+    /* --- Controls --- */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    button {
+      background: #1e1e2e;
+      color: #e0e0e8;
+      border: 1px solid #2e2e3e;
+      border-radius: 8px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #2a2a3e; }
+
+    #play-btn {
+      background: #7c8aff;
+      color: #fff;
+      border-color: #7c8aff;
+      min-width: 100px;
+    }
+
+    #play-btn:hover { background: #6b79ee; }
+
+    input[type="range"] {
+      flex: 1;
+      height: 4px;
+      appearance: none;
+      background: #2a2a3a;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #7c8aff;
+      cursor: pointer;
+    }
+
+    #time-display {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: #7c8aff;
+      min-width: 4rem;
+      text-align: right;
+    }
+
+    /* --- Demo Display --- */
+    .demo-section {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    #demo-display {
+      font-size: 5rem;
+      line-height: 1;
+      padding: 2rem 0;
+      transition: transform 0.2s ease;
+    }
+
+    /* --- Code Examples --- */
+    .code-section {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .code-section h3 {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      color: #ccc;
+    }
+
+    pre {
+      background: #0e0e16;
+      border: 1px solid #1e1e2e;
+      border-radius: 8px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: #b8b8c8;
+      margin-bottom: 1.5rem;
+    }
+
+    pre:last-child { margin-bottom: 0; }
+
+    .kw { color: #c792ea; }
+    .fn { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .num { color: #f78c6c; }
+    .cm { color: #546e7a; }
+
+    /* --- Footer --- */
+    .footer {
+      text-align: center;
+      color: #444;
+      font-size: 0.8rem;
+      padding-top: 1rem;
+    }
+
+    .footer a { color: #7c8aff; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1><span>cuesheet</span></h1>
+  <p class="subtitle">Zero-dependency TypeScript library for sequencing timed events</p>
+
+  <!-- Timeline Visualizer -->
+  <div class="timeline-section">
+    <div class="section-label">Timeline</div>
+    <div class="timeline-track">
+      <div class="timeline-bar"></div>
+      <div id="playhead"></div>
+      <div id="timeline"></div>
+    </div>
+    <div class="controls">
+      <button id="play-btn">▶ Play</button>
+      <button id="reset-btn">↺ Reset</button>
+      <input type="range" id="scrubber" min="0" max="7500" value="0" step="1">
+      <span id="time-display">0.00s</span>
+    </div>
+  </div>
+
+  <!-- Mini Demo -->
+  <div class="demo-section">
+    <div class="section-label">Countdown Demo</div>
+    <div id="demo-display">🚀</div>
+  </div>
+
+  <!-- Code Examples (Task 10 will expand this) -->
+  <div class="code-section" id="code-examples">
+    <div class="section-label">Code Examples</div>
+
+    <h3>Basic Usage</h3>
+    <pre><span class="kw">import</span> { cue, cuesheet } <span class="kw">from</span> <span class="str">'cuesheet'</span>
+
+<span class="cm">// Define cues at specific times</span>
+<span class="kw">const</span> <span class="fn">READY</span> = <span class="fn">cue</span>(<span class="num">0</span>)
+<span class="kw">const</span> <span class="fn">GO</span>    = <span class="fn">cue</span>(<span class="num">3000</span>)
+
+<span class="cm">// Create a sheet and subscribe</span>
+<span class="kw">const</span> sheet = <span class="fn">cuesheet</span>()
+sheet.<span class="fn">on</span>(<span class="fn">READY</span>, () => console.<span class="fn">log</span>(<span class="str">'Get ready...'</span>))
+sheet.<span class="fn">on</span>(<span class="fn">GO</span>,    () => console.<span class="fn">log</span>(<span class="str">'Go!'</span>))
+
+sheet.<span class="fn">play</span>()</pre>
+
+    <h3>Repeating Cues</h3>
+    <pre><span class="cm">// Fire every 500ms, up to 5 times</span>
+<span class="kw">const</span> <span class="fn">PULSE</span> = <span class="fn">cue</span>(<span class="num">1000</span>).<span class="fn">repeats</span>(<span class="num">500</span>).<span class="fn">times</span>(<span class="num">5</span>)
+
+<span class="cm">// Or repeat until a boundary cue</span>
+<span class="kw">const</span> <span class="fn">END</span>   = <span class="fn">cue</span>(<span class="num">10000</span>)
+<span class="kw">const</span> <span class="fn">TICK</span>  = <span class="fn">cue</span>(<span class="num">0</span>).<span class="fn">repeats</span>(<span class="num">250</span>).<span class="fn">until</span>(<span class="fn">END</span>)</pre>
+
+    <h3>Playback Controls</h3>
+    <pre>sheet.<span class="fn">play</span>()       <span class="cm">// Start playback</span>
+sheet.<span class="fn">pause</span>()      <span class="cm">// Pause at current time</span>
+sheet.<span class="fn">seek</span>(<span class="num">5000</span>)  <span class="cm">// Jump to 5 seconds</span>
+sheet.<span class="fn">destroy</span>()    <span class="cm">// Clean up</span>
+
+<span class="cm">// Read current position</span>
+console.<span class="fn">log</span>(sheet.currentTime)</pre>
+  </div>
+
+  <div class="footer">
+    <a href="https://github.com/brycehanscomb/cuesheet">GitHub</a> · MIT License
+  </div>
+
+  <script type="module" src="./dist/demo.mjs"></script>
+</body>
+</html>
