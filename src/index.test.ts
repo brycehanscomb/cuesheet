@@ -59,6 +59,51 @@ describe("cue().repeats()", () => {
 	});
 });
 
+describe("cue().after()", () => {
+	it("creates a cue relative to another cue", () => {
+		const BASE = cue(1000);
+		const RELATIVE = cue(500).after(BASE);
+		expect(RELATIVE.startTime).toBe(1500);
+	});
+
+	it("chains with zero offset", () => {
+		const BASE = cue(3000);
+		const SAME = cue(0).after(BASE);
+		expect(SAME.startTime).toBe(3000);
+	});
+
+	it("relative cue can itself be a base for another relative cue", () => {
+		const A = cue(1000);
+		const B = cue(500).after(A);
+		const C = cue(200).after(B);
+		expect(C.startTime).toBe(1700);
+	});
+
+	it("relative cue supports .repeats()", () => {
+		const BASE = cue(1000);
+		const TICK = cue(500).after(BASE).repeats(100).times(3);
+		expect(TICK.startTime).toBe(1500);
+		expect(TICK.interval).toBe(100);
+		expect(TICK.maxCount).toBe(3);
+	});
+
+	it("relative cue fires at correct time", () => {
+		vi.useFakeTimers();
+		const cb = vi.fn();
+		const BASE = cue(200);
+		const LATER = cue(100).after(BASE);
+		const sheet = cuesheet();
+		sheet.on(LATER, cb);
+		sheet.play();
+		vi.advanceTimersByTime(250);
+		expect(cb).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(100);
+		expect(cb).toHaveBeenCalledOnce();
+		sheet.destroy();
+		vi.useRealTimers();
+	});
+});
+
 describe("cuesheet()", () => {
 	it("creates a sheet instance", () => {
 		const sheet = cuesheet();

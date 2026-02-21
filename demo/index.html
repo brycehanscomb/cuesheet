@@ -48,7 +48,7 @@
 
     .timeline-track {
       position: relative;
-      height: 48px;
+      height: 56px;
       background: #1a1a28;
       border-radius: 8px;
       margin-bottom: 1.25rem;
@@ -70,7 +70,7 @@
       top: 50%;
       left: 0%;
       width: 3px;
-      height: 32px;
+      height: 40px;
       background: #7c8aff;
       border-radius: 2px;
       transform: translate(-50%, -50%);
@@ -78,6 +78,17 @@
       transition: left 0.05s linear;
       z-index: 2;
       box-shadow: 0 0 8px rgba(124, 138, 255, 0.4);
+    }
+
+    #playhead-time {
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.65rem;
+      color: #7c8aff;
+      white-space: nowrap;
     }
 
     .marker {
@@ -122,7 +133,7 @@
     }
 
     .marker-label {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: #666;
       margin-top: 4px;
       white-space: nowrap;
@@ -130,6 +141,14 @@
     }
 
     .marker.fired .marker-label { color: #bbb; }
+
+    .marker-time {
+      color: #555;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.55rem;
+    }
+
+    .marker.fired .marker-time { color: #777; }
 
     /* --- Controls --- */
     .controls {
@@ -261,7 +280,7 @@
     <div class="section-label">Timeline</div>
     <div class="timeline-track">
       <div class="timeline-bar"></div>
-      <div id="playhead"></div>
+      <div id="playhead"><span id="playhead-time">0.00s</span></div>
       <div id="timeline"></div>
     </div>
     <div class="controls">
@@ -278,7 +297,7 @@
     <div id="demo-display">🚀</div>
   </div>
 
-  <!-- Code Examples (Task 10 will expand this) -->
+  <!-- Code Examples -->
   <div class="code-section" id="code-examples">
     <div class="section-label">Code Examples</div>
 
@@ -295,6 +314,15 @@ sheet.<span class="fn">on</span>(<span class="fn">READY</span>, () => console.<s
 sheet.<span class="fn">on</span>(<span class="fn">GO</span>,    () => console.<span class="fn">log</span>(<span class="str">'Go!'</span>))
 
 sheet.<span class="fn">play</span>()</pre>
+
+    <h3>Relative Cues</h3>
+    <pre><span class="cm">// Define cues relative to other cues</span>
+<span class="kw">const</span> <span class="fn">INTRO</span>  = <span class="fn">cue</span>(<span class="num">0</span>)
+<span class="kw">const</span> <span class="fn">MIDDLE</span> = <span class="fn">cue</span>(<span class="num">2000</span>).<span class="fn">after</span>(<span class="fn">INTRO</span>)   <span class="cm">// fires at 2000ms</span>
+<span class="kw">const</span> <span class="fn">END</span>    = <span class="fn">cue</span>(<span class="num">1500</span>).<span class="fn">after</span>(<span class="fn">MIDDLE</span>)  <span class="cm">// fires at 3500ms</span>
+
+<span class="cm">// Chain with repeats</span>
+<span class="kw">const</span> <span class="fn">PULSE</span>  = <span class="fn">cue</span>(<span class="num">500</span>).<span class="fn">after</span>(<span class="fn">MIDDLE</span>).<span class="fn">repeats</span>(<span class="num">250</span>).<span class="fn">until</span>(<span class="fn">END</span>)</pre>
 
     <h3>Repeating Cues</h3>
     <pre><span class="cm">// Fire every 500ms, up to 5 times</span>

@@ -3,6 +3,7 @@ export interface Cue {
 	readonly interval?: number;
 	readonly maxCount?: number;
 	readonly untilTime?: number;
+	after(baseCue: Cue): Cue;
 	repeats(intervalMs: number): RepeatingCue;
 }
 
@@ -17,6 +18,9 @@ export function cue(startTimeMs: number): Cue {
 		interval: undefined,
 		maxCount: undefined,
 		untilTime: undefined,
+		after(baseCue: Cue): Cue {
+			return cue(startTimeMs + baseCue.startTime);
+		},
 		repeats(intervalMs: number): RepeatingCue {
 			return repeatingCue(startTimeMs, intervalMs);
 		},
@@ -163,6 +167,9 @@ function repeatingCue(startTimeMs: number, intervalMs: number): RepeatingCue {
 		interval: intervalMs,
 		maxCount: undefined,
 		untilTime: undefined,
+		after(_: Cue): Cue {
+			throw new Error("Cannot use .after() on a repeating cue");
+		},
 		repeats(_: number): RepeatingCue {
 			throw new Error("Already repeating");
 		},
@@ -172,6 +179,9 @@ function repeatingCue(startTimeMs: number, intervalMs: number): RepeatingCue {
 				interval: intervalMs,
 				maxCount: n,
 				untilTime: undefined,
+				after(_: Cue): Cue {
+					throw new Error("Cannot use .after() on a repeating cue");
+				},
 				repeats(_: number): RepeatingCue {
 					throw new Error("Already terminated");
 				},
@@ -183,6 +193,9 @@ function repeatingCue(startTimeMs: number, intervalMs: number): RepeatingCue {
 				interval: intervalMs,
 				maxCount: undefined,
 				untilTime: boundary.startTime,
+				after(_: Cue): Cue {
+					throw new Error("Cannot use .after() on a repeating cue");
+				},
 				repeats(_: number): RepeatingCue {
 					throw new Error("Already terminated");
 				},

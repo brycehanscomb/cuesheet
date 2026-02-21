@@ -15,8 +15,8 @@ import { cue, cuesheet } from 'cuesheet'
 
 const READY = cue(0)
 const GO    = cue(3000)
-const PULSE = cue(3500).repeats(500).times(5)
-const END   = cue(6000)
+const PULSE = cue(500).after(GO).repeats(500).times(5)
+const END   = cue(2500).after(GO)
 
 const sheet = cuesheet()
 
@@ -33,6 +33,7 @@ sheet.play()
 | Export | Type | Description |
 |---|---|---|
 | `cue(ms)` | factory | Create a one-shot cue at a timestamp |
+| `.after(cue)` | chain | Define cue relative to another cue |
 | `.repeats(ms)` | chain | Make cue repeat at interval |
 | `.times(n)` | terminator | Limit repeat count |
 | `.until(cue)` | terminator | Limit repeat to boundary cue |

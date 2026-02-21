@@ -2,12 +2,12 @@ import { cue, cuesheet } from "../src/index";
 
 // --- Cue Definitions ---
 const READY = cue(0);
-const THREE = cue(1000);
-const TWO = cue(2000);
-const ONE = cue(3000);
-const GO = cue(4000);
-const PULSE = cue(4500).repeats(500).times(5);
-const FINISH = cue(7000);
+const THREE = cue(1000).after(READY);
+const TWO = cue(1000).after(THREE);
+const ONE = cue(1000).after(TWO);
+const GO = cue(1000).after(ONE);
+const PULSE = cue(500).after(GO).repeats(500).times(5);
+const FINISH = cue(3000).after(GO);
 
 const TOTAL_DURATION = 7500;
 
@@ -36,6 +36,7 @@ const scrubber = document.getElementById("scrubber") as HTMLInputElement;
 const timeDisplay = document.getElementById("time-display") as HTMLElement;
 const timeline = document.getElementById("timeline") as HTMLElement;
 const playhead = document.getElementById("playhead") as HTMLElement;
+const playheadTime = document.getElementById("playhead-time") as HTMLElement;
 const demoDisplay = document.getElementById("demo-display") as HTMLElement;
 
 // --- Sheet Setup ---
@@ -51,7 +52,8 @@ function renderMarkers() {
 		marker.className = `marker${repeating ? " repeating" : ""}`;
 		marker.style.left = `${(time / TOTAL_DURATION) * 100}%`;
 		const showLabel = !repeating || pulseCount === 0;
-		marker.innerHTML = `<span class="marker-dot"></span>${showLabel ? `<span class="marker-label">${label}</span>` : ""}`;
+		const timeStr = `${(time / 1000).toFixed(1)}s`;
+		marker.innerHTML = `<span class="marker-dot"></span>${showLabel ? `<span class="marker-label">${label} <span class="marker-time">${timeStr}</span></span>` : `<span class="marker-label"><span class="marker-time">${timeStr}</span></span>`}`;
 		marker.dataset.time = String(time);
 		timeline.appendChild(marker);
 		if (repeating) pulseCount++;
@@ -134,6 +136,7 @@ function updateUI() {
 	const t = sheet.currentTime;
 	const pct = Math.min(t / TOTAL_DURATION, 1);
 	playhead.style.left = `${pct * 100}%`;
+	playheadTime.textContent = `${(t / 1000).toFixed(2)}s`;
 	scrubber.value = String(Math.round(t));
 	timeDisplay.textContent = `${(t / 1000).toFixed(2)}s`;
 
