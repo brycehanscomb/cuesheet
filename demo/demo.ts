@@ -11,14 +11,22 @@ const FINISH = cue(7000);
 
 const TOTAL_DURATION = 7500;
 
+const PULSE_START = 4500;
+const PULSE_INTERVAL = 500;
+const PULSE_COUNT = 5;
+
 const cues = [
-	{ cue: READY, label: "READY", time: 0 },
-	{ cue: THREE, label: "3", time: 1000 },
-	{ cue: TWO, label: "2", time: 2000 },
-	{ cue: ONE, label: "1", time: 3000 },
-	{ cue: GO, label: "GO!", time: 4000 },
-	{ cue: PULSE, label: "PULSE", time: 4500, repeating: true },
-	{ cue: FINISH, label: "FINISH", time: 7000 },
+	{ label: "READY", time: 0 },
+	{ label: "3", time: 1000 },
+	{ label: "2", time: 2000 },
+	{ label: "1", time: 3000 },
+	{ label: "GO!", time: 4000 },
+	...Array.from({ length: PULSE_COUNT }, (_, i) => ({
+		label: `PULSE`,
+		time: PULSE_START + i * PULSE_INTERVAL,
+		repeating: true,
+	})),
+	{ label: "FINISH", time: 7000 },
 ];
 
 // --- DOM References ---
@@ -37,13 +45,16 @@ let animFrameId: number | null = null;
 
 // --- Timeline Markers ---
 function renderMarkers() {
+	let pulseCount = 0;
 	cues.forEach(({ label, time, repeating }) => {
 		const marker = document.createElement("div");
 		marker.className = `marker${repeating ? " repeating" : ""}`;
 		marker.style.left = `${(time / TOTAL_DURATION) * 100}%`;
-		marker.innerHTML = `<span class="marker-dot"></span><span class="marker-label">${label}</span>`;
+		const showLabel = !repeating || pulseCount === 0;
+		marker.innerHTML = `<span class="marker-dot"></span>${showLabel ? `<span class="marker-label">${label}</span>` : ""}`;
 		marker.dataset.time = String(time);
 		timeline.appendChild(marker);
+		if (repeating) pulseCount++;
 	});
 }
 
@@ -94,9 +105,22 @@ function setupCues() {
 }
 
 // --- Visual Feedback ---
+let pulseIndex = 0;
+
 function flash(label: string) {
-	// Highlight marker
-	const markers = timeline.querySelectorAll(".marker");
+	if (label === "PULSE") {
+		// Flash the next unfired pulse marker
+		const pulseMarkers = timeline.querySelectorAll(".marker.repeating");
+		if (pulseIndex < pulseMarkers.length) {
+			const el = pulseMarkers[pulseIndex] as HTMLElement;
+			el.classList.add("fired");
+			setTimeout(() => el.classList.remove("fired"), 400);
+			pulseIndex++;
+		}
+		return;
+	}
+
+	const markers = timeline.querySelectorAll(".marker:not(.repeating)");
 	markers.forEach((m) => {
 		const el = m as HTMLElement;
 		if (el.querySelector(".marker-label")?.textContent === label) {
@@ -133,6 +157,7 @@ playBtn.addEventListener("click", () => {
 	} else {
 		if (sheet.currentTime >= TOTAL_DURATION) {
 			sheet.seek(0);
+			pulseIndex = 0;
 			demoDisplay.textContent = "🚀";
 			demoDisplay.style.transform = "scale(1)";
 		}
@@ -147,6 +172,7 @@ resetBtn.addEventListener("click", () => {
 	sheet.pause();
 	sheet.seek(0);
 	isPlaying = false;
+	pulseIndex = 0;
 	playBtn.textContent = "▶ Play";
 	if (animFrameId != null) cancelAnimationFrame(animFrameId);
 	demoDisplay.textContent = "🚀";
