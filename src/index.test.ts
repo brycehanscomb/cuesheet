@@ -162,3 +162,58 @@ describe('cuesheet — one-shot cue firing', () => {
     sheet.destroy()
   })
 })
+
+describe('cuesheet — repeating cue firing', () => {
+  beforeEach(() => { vi.useFakeTimers() })
+  afterEach(() => { vi.useRealTimers() })
+
+  it('fires a repeating cue at each interval', () => {
+    const cb = vi.fn()
+    const TICK = cue(0).repeats(100)
+    const sheet = cuesheet()
+    sheet.on(TICK, cb)
+    sheet.play()
+    vi.advanceTimersByTime(350)
+    // Should fire at 0, 100, 200, 300 = 4 times (approx, depends on frame timing)
+    expect(cb.mock.calls.length).toBeGreaterThanOrEqual(3)
+    sheet.destroy()
+  })
+
+  it('.times() limits repetitions', () => {
+    const cb = vi.fn()
+    const TICK = cue(0).repeats(100).times(3)
+    const sheet = cuesheet()
+    sheet.on(TICK, cb)
+    sheet.play()
+    vi.advanceTimersByTime(1000)
+    expect(cb).toHaveBeenCalledTimes(3)
+    sheet.destroy()
+  })
+
+  it('.until() stops at boundary time', () => {
+    const cb = vi.fn()
+    const END = cue(300)
+    const TICK = cue(0).repeats(100).until(END)
+    const sheet = cuesheet()
+    sheet.on(TICK, cb)
+    sheet.play()
+    vi.advanceTimersByTime(1000)
+    // Should fire at 0, 100, 200, 300 = 4 times max
+    expect(cb.mock.calls.length).toBeLessThanOrEqual(4)
+    expect(cb.mock.calls.length).toBeGreaterThanOrEqual(3)
+    sheet.destroy()
+  })
+
+  it('repeating cue with delayed start', () => {
+    const cb = vi.fn()
+    const TICK = cue(200).repeats(100)
+    const sheet = cuesheet()
+    sheet.on(TICK, cb)
+    sheet.play()
+    vi.advanceTimersByTime(150)
+    expect(cb).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(200)
+    expect(cb.mock.calls.length).toBeGreaterThanOrEqual(1)
+    sheet.destroy()
+  })
+})
